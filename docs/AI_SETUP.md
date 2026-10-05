@@ -97,6 +97,7 @@ The flags (all of them: `START-HERE.bat --help`):
 | `--context N` | context in tokens; default by VRAM: 32768 under 14 GB, 65536 under 20 GB, else 131072 |
 | `--vision yes\|no\|gpu\|cpu` | read pictures; `--yes` leaves images off. AMD cards: `cpu` |
 | `--gpu N` / `--gpus 0,1` / `--gpus all` | one card, or several sharing the model (default: the card with the most VRAM) |
+| `--default-gpu 0\|1` | which GPU to use when neither `--gpu` nor `--gpus` is given; remembered for this PC (default: `1`, the second card) |
 | `--backend cuda\|hip` | NVIDIA or AMD engine; chosen by itself on a PC with only one kind of card |
 | `--data-dir PATH` | where the 70-120 GB of model files go |
 | `--port N` | the server port (default 8080) |

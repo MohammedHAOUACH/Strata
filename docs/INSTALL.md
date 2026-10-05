@@ -219,8 +219,8 @@ SETUP.bat                                       the same (double-click it)
 START-HERE.bat --model IQ2_XS --context 32768 --vision yes --yes     no questions
 START-HERE.bat --gguf-dir D:\models\IQ2_XS       use GGUF files you already have
 START-HERE.bat --data-dir E:\Strata-data         keep the model files somewhere else
-START-HERE.bat --port 8081                      another port
-START-HERE.bat --gpu 1                          another GPU (setup picks the one with the most VRAM)
+START-HERE.bat --port 8081                      another portSTART-HERE.bat --default-gpu 0 which GPU to use when no --gpu/--gpus is given, remembered for this PC (default 1: the second card)
+START-HERE.bat --gpu 1 another GPU (setup picks the one with the most VRAM)
 START-HERE.bat --gpus 0,2                       several GPUs sharing the model
 START-HERE.bat --vram-reserve-mib 2048          leave 2 GB of VRAM free for other programs (remembered)
 START-HERE.bat --no-browser                     do not open the chat page when the model is ready (remembered;

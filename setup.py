@@ -774,6 +774,13 @@ def choose_gpus(a, found) -> list:
     if not single:
         gpu_table(found)
         fail("none of your GPUs can run Strata", "it needs an NVIDIA RTX 20 series or newer (compute capability 7.5+)")
+    # the PC's default GPU (settings.json 'default_gpu', else GPU 1 on a multi-GPU PC): used when the user named neither
+    # --gpu nor --gpus.  --gpu N still runs one card for a single start, --gpus 0,1 shares the model.
+    pref = default_gpu_choice(found)
+    if pref is not None:
+        say(f"  using {gpu_name(next(g for g in found if g['index'] == pref))} as this PC's default GPU")
+        say("  (change it with --default-gpu 0, one card for a start with --gpu N, or --gpus 0,1 to share)")
+        return [pref]
     can = together_ok(found)
     if not can:
         return [single[0]["index"]]
@@ -2538,6 +2545,37 @@ def save_settings(s: dict) -> None:
         warn(f"could not save {settings_path()} ({e})")
 
 
+DEFAULT_GPU_KEY = "default_gpu"                     # settings.json: which GPU to use when none is named
+
+
+def set_default_gpu(n: int) -> None:
+    """Remember which GPU (0 or 1) installs and starts use when the user names no --gpu/--gpus."""
+    save_settings({**load_settings(), DEFAULT_GPU_KEY: int(n)})
+
+
+def default_gpu_choice(found) -> int | None:
+    """The GPU to use when the user names none: settings.json's 'default_gpu' (START-HERE.bat --default-gpu N), or
+    GPU 1 when it was never set and this PC has more than one card (so the second card is the default).  None: the PC
+    has one card, or the remembered one is missing or cannot be used - choose as usual."""
+    v = load_settings().get(DEFAULT_GPU_KEY)
+    remembered = v is not None
+    if not remembered:
+        v = 1 if len(found) > 1 else None
+    if v is None:
+        return None
+    try:
+        v = int(v)
+    except (TypeError, ValueError):
+        return None
+    g = next((x for x in found if x["index"] == v), None)
+    if g is None or gpu_problem(g) is not None:
+        if remembered:
+            warn(f"the default GPU {v} cannot be used here "
+                 f"({'not found on this PC' if g is None else gpu_problem(g)}): choosing as usual")
+        return None
+    return v
+
+
 def has_data(folder: Path) -> bool:
     for d in DATA_ITEMS:
         try:
@@ -3555,6 +3593,9 @@ def main() -> int:
                     help="EXPERIMENTAL, off by default: the control vector in data/experimental-speed-projection "
                          "(or another GGUF) as a projection on layers 4-44; see docs/DETAILS.md")
     ap.add_argument("--port", type=int, help="the server's port (default: the one the install was set up with, 8080 for a new one)")
+    ap.add_argument("--default-gpu", choices=["0", "1"],
+                    help="which GPU to use when neither --gpu nor --gpus is given, remembered for this PC "
+                         "(default: 1, the second card; 0 uses the first)")
     ap.add_argument("--gpu", help="one GPU, numbered as nvidia-smi numbers them (default: asked when several can be "
                                   "used; with --setup it is saved, when starting it is for that start only)")
     ap.add_argument("--gpus", help="several GPUs sharing one model, as nvidia-smi numbers them (AMD: as setup lists "
@@ -3637,6 +3678,9 @@ def main() -> int:
             a.gpu = int(a.gpu)
         else:
             ap.error(f"--gpu takes a GPU number as nvidia-smi numbers them, e.g. --gpu 1 (or --gpus 0,2), not {a.gpu!r}")
+    if a.default_gpu is not None:                      # remember which card to use when none is named (default 1)
+        set_default_gpu(int(a.default_gpu))
+        ok(f"the default GPU is now {a.default_gpu} (remembered in {settings_path()}; a new install or --setup uses it)")
     say("Strata - Qwen3.8-Flash-Next on a normal PC (a GPU + system RAM + CPU)")
     data, elsewhere = data_folder(a.data_dir)          # the model files: in the data folder, found from any copy
     roots = [data, *elsewhere]
