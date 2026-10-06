@@ -218,6 +218,7 @@ class VisionTokens(unittest.TestCase):
         code, out, cfg, _ = self.run_setup("--vision", "cpu")
         self.assertEqual(code, 0, out)
         self.assertEqual(cfg["vision"]["max_tokens"], 300)               # the default, as before
+        self.assertEqual(cfg["vision"]["threads"], max(1, setup.os.cpu_count() or 8))
         self.assertNotIn("--vision-tokens", out)
         code, out, cfg, _ = self.run_setup("--vision", "cpu", "--vision-tokens", "768")
         self.assertEqual(code, 0, out)
