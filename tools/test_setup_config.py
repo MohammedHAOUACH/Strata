@@ -64,7 +64,16 @@ class CarryOver(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertNotIn("kept from", out)
         self.assertNotIn(".bak", out)
+        self.assertIs(cfg["fit_max_tokens"], True)
         self.assertFalse(set(cfg) - setup.SETUP_KEYS)                     # setup writes only its own keys
+
+    def test_fit_max_tokens_is_enabled_again_on_setup(self):
+        code, out, first, _ = self.run_setup()
+        self.assertEqual(code, 0, out)
+        old = {**first, "fit_max_tokens": False}
+        code, out, cfg, _ = self.run_setup(configs=[("strata-q2_0.json", old)])
+        self.assertEqual(code, 0, out)
+        self.assertIs(cfg["fit_max_tokens"], True)
 
     def test_setup_keys_are_rewritten(self):
         code, out, first, _ = self.run_setup()

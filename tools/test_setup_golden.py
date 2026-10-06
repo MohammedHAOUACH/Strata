@@ -55,7 +55,11 @@ def normalize(v, t: Path):
     if isinstance(v, list):
         return [normalize(x, t) for x in v]
     if isinstance(v, str):
-        return v.replace(str(t), "<T>").replace("\\", "/").replace(setup.EXE, "<EXE>")
+        v = v.replace(str(t), "<T>").replace("\\", "/")
+        exe = setup.EXE.replace("\\", "/")
+        if v == exe or v.endswith("/" + exe):
+            return v[:-len(exe)] + "<EXE>" if v != exe else "<EXE>"
+        return v
     return v
 
 
@@ -182,6 +186,7 @@ class Golden(unittest.TestCase):
             with self.subTest(key):
                 code, out, cfg, asked = install(ram, found, argv_for(family, model))
                 self.assertEqual(code, 0, out[-3000:])
+                self.assertIs(cfg["fit_max_tokens"], True)
                 self.assertEqual(cfg, self.golden[key]["config"], out[-3000:])
                 self.assertEqual(asked, [])
 
@@ -190,6 +195,7 @@ class Golden(unittest.TestCase):
             with self.subTest(key):
                 code, out, cfg, asked = install(ram, found, argv_for(family, model), answers="")
                 self.assertEqual(code, 0, out[-3000:])
+                self.assertIs(cfg["fit_max_tokens"], True)
                 self.assertEqual(cfg, self.golden[key]["config"], out[-3000:])
 
     def test_the_refusals_with_yes_alone_stay(self):

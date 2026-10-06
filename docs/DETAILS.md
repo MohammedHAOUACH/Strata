@@ -566,17 +566,17 @@ print(r.choices[0].message.content)
   ```
 
   Set `limit.context` to the context you chose in setup: OpenCode compacts the conversation before it gets there.
-  Keep `limit.output` well under it: a request whose prompt plus `max_tokens` runs past the context is refused (see
-  **Context** below), or add `"fit_max_tokens": true` to `strata-<model>.json`. For a hard cap on the thinking, add
+  Keep `limit.output` well under it. Setup-generated configs shorten `max_tokens` to the room left if prompt plus
+  output would exceed the context (see **Context** below). For a hard cap on the thinking, add
   `"reasoning_budget_tokens": N` to `strata-<model>.json` (see above).
 - **Claude Code** (Strata 0.1.17 or newer): set `ANTHROPIC_BASE_URL=http://127.0.0.1:8080` and
   `ANTHROPIC_MODEL` to a Claude model name it knows (it refuses names it doesn't; Strata ignores the name), plus any
   `ANTHROPIC_AUTH_TOKEN` (or your `api_key`, if you set one).
 - **Codex CLI** (0.1.39): see [the Responses API](#the-responses-api-and-codex-cli) below.
-- **Context.** Chosen in setup (8K-262K). Requests longer than that are refused, never silently cut. A request whose
-  `max_tokens` would run past the context is refused too (400); agents that always ask for their full output cap
-  can instead get it shortened to the room left: add `"fit_max_tokens": true` to `strata-<model>.json` (or pass
-  `--fit-max-tokens` to `serve/server.py`). A prompt that leaves no room at all is still refused.
+- **Context.** Chosen in setup (8K-262K). Requests longer than that are refused, never silently cut. Setup enables
+  `"fit_max_tokens": true` in generated model configs, so a `max_tokens` that would run past the context is shortened
+  to the room left instead of being refused with 400. Remove the key or set it to `false` to reject such requests
+  instead; a prompt that leaves no room at all is still refused.
 - **Model aliases** (0.1.32). `"aliases": ["qwen", "local-model"]` in `strata-<model>.json` lists the model under
   those names too in `/v1/models` (each with its own `id`, and in the model's `aliases`), like llama-server's
   `--alias`; a request naming one is answered under that name. Any other name is still served, as before.
